@@ -600,6 +600,7 @@
             // pbImagenPJ
             // 
             pbImagenPJ.BackColor = Color.White;
+            pbImagenPJ.Image = Properties.Resources.dummy;
             pbImagenPJ.InitialImage = (Image)resources.GetObject("pbImagenPJ.InitialImage");
             pbImagenPJ.Location = new Point(341, 22);
             pbImagenPJ.Margin = new Padding(4, 3, 4, 3);

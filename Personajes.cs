@@ -5,220 +5,254 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace TouRPGProject
-{    
-    public class PersonajeBase
+{
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+
+    public abstract class PersonajeBase : IDisposable
     {
-        public string IdPersonaje { get; set; }
-        public int Nivel { get; set; }
-        public string Nombre { get; set; }
-        public string Titulo { get; set; }
-        public string Especializacion { get; set; }
-        private int _saludActual = 0;
-        public int SaludActual { 
-            get { return _saludActual; } 
-            set {
-                _saludActual = value;
-                if (_saludActual <= 0) 
+        #region Propiedades Básicas
+        private string _nombre;
+        public string IdPersonaje { get; protected set; }
+        public int Nivel { get; protected set; }
+        public string Nombre
+        {
+            get => _nombre;
+            protected set => _nombre = !string.IsNullOrEmpty(value) ? value
+                : throw new ArgumentException("El nombre no puede estar vacío");
+        }
+        public string Titulo { get; protected set; }
+        public string Especializacion { get; protected set; }
+        #endregion
+
+        #region Stats y Estado
+        private int _saludActual;
+        public int SaludActual
+        {
+            get => _saludActual;
+            set
+            {
+                _saludActual = Math.Max(0, Math.Min(value, StatsPersonaje?.Vitalidad ?? 0));
+                if (_saludActual <= 0)
                 {
-                    Vivo = false; 
+                    Morir();
                 }
             }
         }
-        public Stats StatsPersonaje { get; set; }
-        public bool Vivo { get; set; }
-        public List<Pasiva> Pasivas { get; set; }
-        public List<Habilidad> Habilidades { get; set; }
-        public Habilidad AtaqueBasico { get; set; }
-        private Arma _mano1;
-        private Arma _mano2;
-        private Equipo _cabeza;
-        private Equipo _pecho;
-        private Equipo _piernas;
-        private Equipo _brazos;
-        private Accesorio _amuleto;
-        private Accesorio _anillo;
-        public Arma Mano1 { get { return _mano1; } set { _mano1 = value; RecalcularStats(); } }
-        public Arma Mano2 { get { return _mano2; } set { _mano2 = value; RecalcularStats(); } }
-        public Equipo Cabeza { 
-            get { return _cabeza; }
-            set { if (value != null && value.ZonaEquipable == "cabeza") { _cabeza = value; RecalcularStats(); } else { Cabeza = null; } }
-        }
-        public Equipo Pecho {
-            get { return _pecho; }
-            set { if (value != null && value.Tipo == "pecho") { _pecho = value; RecalcularStats(); } else { Pecho = null; } } 
-        }
-        public Equipo Piernas {
-            get { return _piernas; }
-            set { if (value != null && value.Tipo == "piernas") { _piernas = value; RecalcularStats(); } else { Piernas = null; } } 
-        }
-        public Equipo Brazos {
-            get { return _brazos; }
-            set { if (value != null && value.Tipo == "brazos") { _brazos = value; RecalcularStats(); } else { Brazos = null; } } 
-        }
-        public Accesorio Amuleto {
-            get { return _amuleto; } 
-            set { if (value != null && value.Tipo == "amuleto") { _amuleto = value; RecalcularStats(); } else { Amuleto = null; } } 
-        }
-        public Accesorio Anillo { 
-            get { return _anillo; }
-            set { if (value != null && value.Tipo == "anillo") { _anillo = value; RecalcularStats(); } else { Anillo = null; } } 
-        }
+        public Stats StatsPersonaje { get; private set; }
+        public bool Vivo { get; private set; }
+        #endregion
 
-        public PersonajeBase(){}
+        #region Colecciones
+        public IReadOnlyList<Pasiva> Pasivas => _pasivas?.AsReadOnly();
+        public IReadOnlyList<Habilidad> Habilidades => _habilidades?.AsReadOnly();
+        private List<Pasiva> _pasivas;
+        private List<Habilidad> _habilidades;
+        public Habilidad AtaqueBasico { get; protected set; }
+        #endregion
 
-        public void RecalcularStats()
+        #region Equipamiento
+        private readonly Dictionary<string, object> _equipamiento;
+
+        public Arma Mano1
         {
-            StatsBasePersonaje statsBase = new StatsBasePersonaje(Especializacion);
-            ModificadoresStatsPersonaje modifsbase = new ModificadoresStatsPersonaje(Especializacion);
-            Stats nuevosStats = new Stats(
-                    statsBase.statsBase.Fuerza + modifsbase.modifsBase.Fuerza * Nivel,
-                    statsBase.statsBase.Magia + modifsbase.modifsBase.Magia * Nivel,
-                    statsBase.statsBase.Resistencia + modifsbase.modifsBase.Resistencia * Nivel,
-                    statsBase.statsBase.Vitalidad + modifsbase.modifsBase.Vitalidad * Nivel,
-                    statsBase.statsBase.Agilidad + modifsbase.modifsBase.Agilidad * Nivel,
-                    statsBase.statsBase.Suerte + modifsbase.modifsBase.Suerte * Nivel
-                );
-            
-            if (_mano1 != null)
-            {
-                nuevosStats.SumarStats(_mano1.StatsArma);
-            }
-            if (_mano2 != null)
-            {
-                nuevosStats.SumarStats(_mano2.StatsArma);
-            }
-            if (_cabeza != null)
-            {
-                nuevosStats.SumarStats(_cabeza.StatsEquipo);
-            }
-            if (_brazos != null)
-            {
-                nuevosStats.SumarStats(_brazos.StatsEquipo);
-            }
-            if (_pecho != null)
-            {
-                nuevosStats.SumarStats(_pecho.StatsEquipo);
-            }
-            if (_piernas != null)
-            {
-                nuevosStats.SumarStats(_piernas.StatsEquipo);
-            }
-            if (_amuleto != null)
-            {
-                nuevosStats.SumarStats(_amuleto.StatsAccesorio);
-            }
-            if (_anillo != null)
-            {
-                nuevosStats.SumarStats(_anillo.StatsAccesorio);
-            }
-            
-            StatsPersonaje = nuevosStats;
+            get => _equipamiento["mano1"] as Arma;
+            set { _equipamiento["mano1"] = value; RecalcularStats(); }
         }
 
-        public void TopearHP()
+        public Arma Mano2
         {
-            this.SaludActual = this.StatsPersonaje.Vitalidad;
+            get => _equipamiento["mano2"] as Arma;
+            set { _equipamiento["mano2"] = value; RecalcularStats(); }
         }
 
-
-        public void Morir()
+        public Equipo Cabeza
         {
-
-            this.Nombre = "Cadáver";
+            get => _equipamiento["cabeza"] as Equipo;
+            set
+            {
+                if (ValidarEquipo(value, "cabeza"))
+                {
+                    _equipamiento["cabeza"] = value;
+                    RecalcularStats();
+                }
+            }
         }
+
+        // ... Similar para Pecho, Piernas, Brazos, Amuleto, Anillo
+        #endregion
+
+        #region Constructores
+        protected PersonajeBase(string idPersonaje, int nivel, string nombre,
+            string titulo, string especializacion)
+        {
+            IdPersonaje = idPersonaje ?? throw new ArgumentNullException(nameof(idPersonaje));
+            Nivel = nivel > 0 ? nivel : throw new ArgumentException("Nivel debe ser mayor que 0");
+            Nombre = nombre;
+            Titulo = titulo;
+            Especializacion = especializacion ??
+                throw new ArgumentNullException(nameof(especializacion));
+
+            _pasivas = new List<Pasiva>();
+            _habilidades = new List<Habilidad>();
+            _equipamiento = new Dictionary<string, object>();
+            Vivo = true;
+
+            InicializarEquipamiento();
+        }
+
+        protected PersonajeBase() : this(Guid.NewGuid().ToString(), 1, "Nuevo", "", "")
+        {
+        }
+        #endregion
+
+        #region Métodos Públicos
+        public virtual void RecalcularStats()
+        {
+            var statsBase = new StatsBasePersonaje(Especializacion);
+            var modifsBase = new ModificadoresStatsPersonaje(Especializacion);
+
+            StatsPersonaje = CalcularStatsBase(statsBase, modifsBase);
+            AplicarBonusEquipamiento();
+        }
+
+        //public virtual void TopearHP() => SaludActual = StatsPersonaje.Vitalidad;
+
+        public virtual void Morir()
+        {
+            Vivo = false;
+            Nombre = $"Cadáver de {Nombre}";
+        }
+        #endregion
+
+        #region Métodos Privados
+        private void InicializarEquipamiento()
+        {
+            var slots = new[] { "mano1", "mano2", "cabeza", "pecho", "piernas",
+            "brazos", "amuleto", "anillo" };
+            foreach (var slot in slots)
+            {
+                _equipamiento[slot] = null;
+            }
+        }
+
+        private Stats CalcularStatsBase(StatsBasePersonaje statsBase,
+            ModificadoresStatsPersonaje modifsBase)
+        {
+            return new Stats(
+                statsBase.statsBase.Fuerza + modifsBase.modifsBase.Fuerza * Nivel,
+                statsBase.statsBase.Magia + modifsBase.modifsBase.Magia * Nivel,
+                statsBase.statsBase.Resistencia + modifsBase.modifsBase.Resistencia * Nivel,
+                statsBase.statsBase.Vitalidad + modifsBase.modifsBase.Vitalidad * Nivel,
+                statsBase.statsBase.Agilidad + modifsBase.modifsBase.Agilidad * Nivel,
+                statsBase.statsBase.Suerte + modifsBase.modifsBase.Suerte * Nivel
+            );
+        }
+
+        private void AplicarBonusEquipamiento()
+        {
+            foreach (var equipo in _equipamiento.Values.Where(e => e != null))
+            {
+                switch (equipo)
+                {
+                    case Arma arma:
+                        StatsPersonaje.SumarStats(arma.StatsArma);
+                        break;
+                    case Equipo eq:
+                        StatsPersonaje.SumarStats(eq.StatsEquipo);
+                        break;
+                    case Accesorio acc:
+                        StatsPersonaje.SumarStats(acc.StatsAccesorio);
+                        break;
+                }
+            }
+        }
+
+        private bool ValidarEquipo(Equipo equipo, string zonaRequerida)
+        {
+            return equipo == null || equipo.ZonaEquipable == zonaRequerida;
+        }
+        #endregion
+
+        #region IDisposable
+        private bool _disposed;
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    _pasivas?.Clear();
+                    _habilidades?.Clear();
+                    _equipamiento?.Clear();
+                }
+                _disposed = true;
+            }
+        }
+        #endregion
     }
 
-    public class PersonajeJugador : PersonajeBase
+    public sealed class PersonajeJugador : PersonajeBase
     {
-        public double ExperienciaSiguienteNivel { get; set; }
-        public double Experiencia {
-            get { return Experiencia; }
-            set { if (value >= ExperienciaSiguienteNivel) { SubirNivel(); } }
-        }
-        public List<Objeto> BotinObtenido;
-
-        public PersonajeJugador(string idPersonaje, int nivel, string nombre, string titulo, string especializacion)
+        private double _experiencia;
+        public double ExperienciaSiguienteNivel { get; private set; }
+        public double Experiencia
         {
-            this.IdPersonaje = idPersonaje;
-            this.Nivel = nivel;
-            this.Nombre = nombre;
-            this.Titulo = titulo;
-            this.Especializacion = especializacion;
-            this.StatsPersonaje = new StatsBasePersonaje(especializacion).statsBase;
-            RecalcularStats();
+            get => _experiencia;
+            set
+            {
+                _experiencia = value;
+                if (_experiencia >= ExperienciaSiguienteNivel)
+                {
+                    SubirNivel();
+                }
+            }
+        }
+        public IList<Objeto> BotinObtenido { get; }
 
-            this.SaludActual = this.StatsPersonaje.Vitalidad;
-            BotinObtenido = new List<Objeto>(10);
-            //Llamada a server
-
-
-
+        public PersonajeJugador(string idPersonaje, int nivel, string nombre,
+            string titulo, string especializacion)
+            : base(idPersonaje, nivel, nombre, titulo, especializacion)
+        {
+            BotinObtenido = new List<Objeto>();
+            ExperienciaSiguienteNivel = CalcularExperienciaNivel(nivel);
+            //TopearHP();
         }
 
         private void SubirNivel()
         {
-            Nivel += 1;
+            Nivel++;
             RecalcularStats();
-            double experienciaSobrante = ExperienciaSiguienteNivel - Experiencia;
-            ExperienciaSiguienteNivel *= 2;
-            Experiencia = experienciaSobrante;
+            var experienciaSobrante = _experiencia - ExperienciaSiguienteNivel;
+            ExperienciaSiguienteNivel = CalcularExperienciaNivel(Nivel);
+            _experiencia = experienciaSobrante;
         }
+
+        private static double CalcularExperienciaNivel(int nivel) => Math.Pow(2, nivel) * 1000;
     }
 
-    public class PersonajeEnemigo : PersonajeBase
+    public sealed class PersonajeEnemigo : PersonajeBase
     {
-        public double ExperienciaDropeable { get; set; }
-        public List<Objeto> BotinDropeable { get; set; }
-        public int NivelDificultad { get; set; }
+        public double ExperienciaDropeable { get; private set; }
+        public IReadOnlyList<Objeto> BotinDropeable { get; private set; }
+        public int NivelDificultad { get; private set; }
 
-        public PersonajeEnemigo(string idPersonaje, int nivel, string nombre, string titulo, string especializacion)
+        public PersonajeEnemigo(string idPersonaje, int nivel, string nombre,
+            string titulo, string especializacion)
+            : base(idPersonaje, nivel, nombre, titulo, especializacion)
         {
-            this.IdPersonaje = idPersonaje;
-            this.Nivel = nivel;
-            this.Nombre = nombre;
-            this.Titulo = titulo;
-            this.Especializacion = especializacion;
-            this.StatsPersonaje = new StatsBasePersonaje(especializacion).statsBase;
-            RecalcularStats();
-            this.SaludActual = this.StatsPersonaje.Vitalidad;
-            //Llamadas a server:
-
-            //Botindropeable: Cada personaje tendrá una lista de lo que puedan dropear y un porcentaje de probabilidad, 
-            //la API realizará una lista seleccionando algunos de esos posibles drops y la traerá con el constructor
-            //NivelDificultad
-            //Experiencia: Cada criatura dará una cantidad base, a la que se le sumará un extra por nivel
-            
-        }        
-    }
-
-    public class PersonajeNeutral : PersonajeBase
-    {
-        public double ExperienciaDropeable { get; set; }
-        public List<Objeto> BotinDropeable { get; set; }
-        public int NivelDificultad { get; set; }
-
-        public PersonajeNeutral(string idPersonaje, int nivel, string nombre, string titulo, string especializacion)
-        {
-            this.IdPersonaje = idPersonaje;
-            this.Nivel = nivel;
-            this.Nombre = nombre;
-            this.Titulo = titulo;
-            this.Especializacion = especializacion;
-            this.StatsPersonaje = new StatsBasePersonaje(especializacion).statsBase;
-            RecalcularStats();
-            this.SaludActual = this.StatsPersonaje.Vitalidad;
-            //Llamadas a server:
-
-            //Botindropeable: Cada personaje tendrá una lista de lo que puedan dropear y un porcentaje de probabilidad, 
-            //la API realizará una lista seleccionando algunos de esos posibles drops y la traerá con el constructor
-            //NivelDificultad
-            //Experiencia: Cada criatura dará una cantidad base, a la que se le sumará un extra por nivel
-
-        }
-
-        public void Morir()
-        {
-
+            //TopearHP();
+            // Aquí irían las llamadas al servidor
         }
     }
+    
+
 }
