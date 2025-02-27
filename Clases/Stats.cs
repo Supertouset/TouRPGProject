@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TouRPGProject
+namespace TouRPGProject.Clases
 {
     public class Stats
     {

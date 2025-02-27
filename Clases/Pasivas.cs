@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TouRPGProject
+namespace TouRPGProject.Clases
 {
     public class Pasiva
     {
@@ -17,7 +17,7 @@ namespace TouRPGProject
         public Pasiva(string id)
         {            
             //buscar los datos por id, traer el resto de valores
-            this.idPasiva = id;
+            idPasiva = id;
 
 
         }
@@ -25,10 +25,10 @@ namespace TouRPGProject
         //constructor manual
         public Pasiva(string id, string nombre, string desc, int nivel)
         {
-            this.idPasiva = id;
-            this.nombrePasiva = nombre;
-            this.descPasiva = desc;
-            this.nivelPasiva = nivel;
+            idPasiva = id;
+            nombrePasiva = nombre;
+            descPasiva = desc;
+            nivelPasiva = nivel;
         }
     }
 }

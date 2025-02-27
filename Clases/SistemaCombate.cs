@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace TouRPGProject
+namespace TouRPGProject.Clases
 {
     public class Combate
     {
@@ -16,9 +16,9 @@ namespace TouRPGProject
 
         public Combate(PersonajeJugador jugador, PersonajeEnemigo enemigo)
         {
-            this.Jugador = jugador;
-            this.Enemigo = enemigo;
-            this.CombateTerminado = false;
+            Jugador = jugador;
+            Enemigo = enemigo;
+            CombateTerminado = false;
         }
 
         public void ComenzarCombate()

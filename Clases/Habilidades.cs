@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TouRPGProject
+namespace TouRPGProject.Clases
 {
     public class Habilidad
     {
@@ -16,11 +16,11 @@ namespace TouRPGProject
 
         public Habilidad(string id, string nombre, string objetivo, int dmg, string tipodmg)
         {
-            this.idHabilidad = id;
-            this.Nombre = nombre;
-            this.Objetivo = objetivo;
-            this.CantidadDamage = dmg;
-            this.TipoDamage = tipodmg;
+            idHabilidad = id;
+            Nombre = nombre;
+            Objetivo = objetivo;
+            CantidadDamage = dmg;
+            TipoDamage = tipodmg;
         }
     }    
 }

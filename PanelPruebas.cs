@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Windows.Forms;
+using TouRPGProject.Clases;
 
 namespace TouRPGProject
 {
