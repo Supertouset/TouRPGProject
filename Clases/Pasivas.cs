@@ -18,8 +18,6 @@ namespace TouRPGProject.Clases
         {            
             //buscar los datos por id, traer el resto de valores
             idPasiva = id;
-
-
         }
 
         //constructor manual

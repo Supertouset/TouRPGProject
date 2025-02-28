@@ -10,14 +10,16 @@ namespace TouRPGProject.Clases
     {
         public string idHabilidad { get; set; }
         public string Nombre { get; set; }
+        public string Descripcion { get; set; }
         public string Objetivo { get; set; }
         public int CantidadDamage { get; set; }
         public string TipoDamage { get; set; }
 
-        public Habilidad(string id, string nombre, string objetivo, int dmg, string tipodmg)
+        public Habilidad(string id, string nombre,string descripcion, string objetivo, int dmg, string tipodmg)
         {
             idHabilidad = id;
             Nombre = nombre;
+            Descripcion = descripcion;
             Objetivo = objetivo;
             CantidadDamage = dmg;
             TipoDamage = tipodmg;
