@@ -1,21 +1,21 @@
-﻿using System.Security.Cryptography;
+﻿using System;
+using System.Security.Cryptography;
 
 namespace TouRPGProject.Clases
 {
     public static class CalculosRPG
     {
-        public static Enum GenerarSeleccionEnumRandom(this Type t)
-        {
-            return Enum.GetValues(t).OfType<Enum>().OrderBy(e => Guid.NewGuid()).FirstOrDefault();
-        }
+        public static Enum GenerarSeleccionEnumRandom(this Type t) => Enum.GetValues(t).OfType<Enum>().OrderBy(e => Guid.NewGuid()).FirstOrDefault();
 
         public static int GenerarNumeroSuperRandom(int min, int max)
         {
             int num = min - 1;
 
-            RNGCryptoServiceProvider rg = new RNGCryptoServiceProvider();
             byte[] rno = new byte[4];
-            rg.GetBytes(rno);
+            using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(rno); // The array is now filled with cryptographically strong random bytes.
+            }
             int randomvalue = BitConverter.ToInt32(rno, 0);
             num = randomvalue / 5 - 1;
             Random rnd = new Random();
