@@ -14,13 +14,18 @@ namespace TouRPGProject.Clases
     {
         #region Propiedades Básicas
         private string _nombre;
+        private int _nivel;
+
         public string IdPersonaje { get; protected set; }
-        public int Nivel { get; protected set; }
+        public int Nivel
+        {
+            get => _nivel;
+            protected set => _nivel = value>0 ? value : 1;
+        }
         public string Nombre
         {
             get => _nombre;
-            protected set => _nombre = !string.IsNullOrEmpty(value) ? value
-                : throw new ArgumentException("El nombre no puede estar vacío");
+            protected set => _nombre = !string.IsNullOrEmpty(value) ? value : throw new ArgumentException("El nombre no puede estar vacío");
         }
         public string Titulo { get; protected set; }
         public string Especializacion { get; protected set; }
